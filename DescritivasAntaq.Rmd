@@ -80,6 +80,16 @@ Para este trabalho vamos avaliar média, moda e mediana. Para além disse vamos 
 Alem do mais optamos por avaliar somente aquelas operações com mais de 30 registros anuais.
 para calcular a moda não temos funções nativas implementadas então a função criada abaixo realiza o calculo da moda
 
+Overwiew dos tempos de operações graficamente 
+```{r, cache=TRUE, warning=FALSE}
+par(mfrow = c(2,2))
+plot(dados$TOperacao, main = "Tempo de operacao", xlab = "dados", ylab = "Frequencia Tempos")
+plot(dados$TEsperaAtracacao, main = "Tempo de Es.Atrac", xlab = "dados", ylab = "Frequencia Tempos")
+plot(dados$TEsperaInicioOp, main = "Tempo inicio operacao", xlab = "dados", ylab = "Frequencia Tempos")
+plot(dados$TAtracado, main = "Tempo de atracado", xlab = "dados", ylab = "Frequencia Tempos")
+```
+Note que graficamente existe valores discrepante em todos os tempos.
+
 ```{r}
 calc_moda <- function(v) {
   v <- v[!is.na(v)] # Remove NA

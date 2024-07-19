@@ -1,9 +1,10 @@
 ---
-title: "Analise Exploratoria do setor aquaviario"
+title: "Tutorial de Análise de tempos setor aquaviário"
 author: "Melquisadec"
-date: "2024-07-03"
+date: "2024-07-19"
 output: pdf_document
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -11,24 +12,32 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
+
+
+## *Contextualização* 
+O presente trabalho tem como objetivo avaliar os dados do setor aquaviário, uma estatística descritiva tem um poder de nos apontar diversas informações. Neste sentido temos um data.frame com as seguintes colunas:
+
+"IDAtracacao,NRAno,CDTrigrama,CDTUP,TPOperacao,TEsperaAtracacao,TEsperaInicioOp,TOperacao,TEsperaDesatracacao,TAtracado,TEstadia" *IDAtracacao* é o identificador da embarcação, *NRAno* são os anos que avaliaremos apesar de ter dados desde 2010 optamos por avaliar os ultimos 5 anos pois houve mudanças de sistemas que alimenta esse banco. As variáveis *CDTrigrama* é um código que identifica o porto organizado, *CDTUP* são terminais de uso privado, ou seja, uma empresa constroi um espaço de atividades portuária e pede autorização para Agência nacional de transporte aquaviário(ANTAQ) para realizar operações, *TPOperacoes* é o tipo de operação que cada embarcação realiza pode ser transporte de carga, transporte de passageiro, misto entre outras, e partir desta variáveis são os tempos que estas embarcações levam para cada etapa do processo como *TEsperaAtracacao* que é quanto tempo a embarcação fica atracada na costa (fundeio) *TEsperaInicioOp*, ou seja, quando a embarcação encosta no "berço" quanto tempo leva para iniciar as operações. Após o inicio da operção é avaliado o *TOperacao* que é o quanto tempo a embarcação leva para ser carregada, logo após tem o *TEsperaDesatracacao* que é o tempo que leva para a embarcação desatracar do berço e por fim os dois ultimos tempos que são *TAtracado* que é quanto tempo a embarcação ficou atracada e *TEstadia* que é o tempo total que a embarcação ficou parada naquele porto ou terminal autorizado.
+Para esta análise vamos utilizar o software R com a IDE R studio para elaborar estas análises.
+
+Para importar os dados vamos utilizar a função fread do pacote data.table, pois o conjunto de dados possui aproximadamente 12 milhoes de observações, e esta função importa mais rápido do que funções convencionais como a import.csv ou read.table.
+Esta análise descritiva é muito importante nosso objetivo aqui é avaliar a qualidade dos dados, se há marcações dos tempos corretamente se tem muito valor descrepante oriundos de erro de digitação, se há tempos incoerentes por exemplo tempos zero, ou até mesmo avaliar a moda, ou seja, o agente responsável por anotar esses tempos se está repetindo anotações padrões. 
+*Atenção* como boa prática de programação sempre salve o script em uma pasta antes de rodar a primeira linha de comando esta pasta será o seu diretório e caso os dados não esteja sendo importado via API ou via Banco, ou seja, caso você tenha esses dados em CSV ou XLSX coloque esse conjunto de dados na mesma pasta que salvou ou script, ou seja, no mesmo diretório. Para salvar o script no R studio basta digitar o comando CTRL + S.
+Caso queira rodar o markdow direto os comandos tem que estar na estrutura dos códigos abaixo.
+*Carregando pacotes necessários*
+Sempre carregue os pacotes só reproduzir o comando abaixo que ele baixa e instala caso de algum erro utilize a forma convencional de instalação que é: install.packages("nome do pacote") o nome do pacote tem que estar entre aspas depois de instalado leia o pacote com o comando: library(nome do pacote) para ler não se utiliza aspas.
+
 ```{r, warning=FALSE, cache=TRUE}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # seta o diretorio
 if (!require("pacman")) install.packages("pacman")
 p_load(tidyverse, xtable,extRemes,ggplot2,quantmod,Quandl,ecostats,latex2exp,readxl,openxlsx, data.table)
 
 ```
 
-## *Contextualização* 
-O presente trabalho tem como objetivo avaliar os dados do setor aquaviário, uma simples estatística descritiva tem um poder de nos apontar diversas informações. Neste sentido temos um data.frame com as seguintes colunas:
-
-"IDAtracacao,NRAno,CDTrigrama,CDTUP,TPOperacao,TEsperaAtracacao,TEsperaInicioOp,TOperacao,TEsperaDesatracacao,TAtracado,TEstadia" *IDAtracacao* é o identificador da embarcação, *NRAno* são os anos que avaliaremos apesar de ter dados desde 2010 optamos por avaliar os ultimos 5 anos pois houve mudanças de sistemas que alimenta esse banco. As variáveis *CDTrigrama* é um código que identifica o porto organizado, *CDTUP* são terminais de uso privado, ou seja, uma empresa constroi um espaço de atividades portuária e pede autorização para Agência nacional de transporte aquaviário(ANTAQ) para realizar operações, *TPOperacoes* é o tipo de operação que cada embarcação realiza pode ser transporte de carga, transporte de passageiro, misto entre outras, e partir desta variáveis são os tempos que estas embarcações levam para cada etapa do processo como *TEsperaAtracacao* que é quanto tempo a embarcação fica atracada na costa (fundeio) *TEsperaInicioOp*, ou seja, quando a embarcação encosta no "berço" quanto tempo leva para iniciar as operações. Após o inicio da operção é avaliado o *TOperacao* que é o quanto tempo a embarcação leva para ser carregada, logo após tem o *TEsperaDesatracacao* que é o tempo que leva para a embarcação desatracar do berço e por fim os dois ultimos tempos que são *TAtracado* que é quanto tempo a embarcação ficou atracada e *TEstadia* que é o tempo total que a embarcação ficou parada naquele porto ou terminal autorizado.
-
-Para importar os dados vamos utilizar a função fread do pacote data.table, pois o conjunto de dados possui aproximadamente 12 milhoes de observações, e esta função importa mais rápido do que funções convencionais como a import.csv ou read.table.
-Esta análise descritiva é muito importante nosso objetivo aqui é avaliar a qualidade dos dados, se há marcações dos tempos corretamente se tem muito valor descrepante oriundos de erro de digitação, se há tempos incoerentes por exemplo tempos zero, ou até mesmo avaliar a moda, ou seja, o agente responsável por anotar esses tempos se está repetindo anotações padrões. 
-
 ```{r, cache=TRUE, warning=FALSE}
 DF <- fread('DF2.csv', header = TRUE,  sep = "," )
 ```
-vamos avaliar a estrutura do data.frame com a função str nativa do R
+vamos avaliar a estrutura do data.frame com a função str nativa do R esta função mostra o tipo de todas as variáveis se é inteiro ou carateres 
 ```{r, cache=TRUE, warning=FALSE}
 str(DF)
 
@@ -90,6 +99,11 @@ plot(dados$TAtracado, main = "Tempo de atracado", xlab = "dados", ylab = "Freque
 ```
 Note que graficamente existe valores discrepante em todos os tempos.
 
+A moda é uma medida estatística que mais se repete em um conjunto de dados ela é muito importante principalmente neste contexo. Aqui podemos perceber o quanto um tempo foi anotado diversas vezes na mesma operação.
+
+No r não existe uma função que calcula de imediato a moda, então vamos implementar manualamente a função abaixo retorna a moda. 
+
+
 ```{r}
 calc_moda <- function(v) {
   v <- v[!is.na(v)] # Remove NA
@@ -99,7 +113,7 @@ calc_moda <- function(v) {
 }
 ```
 
-
+Agora vamos agrupar todos os dados e fazer a análise com bloco de função abaixo, optamos em avaliar a media dos tempos, a mediana que é o valor central que não é influenciada por outliers avaliamos a moda e os limites superior e inferior o que esta dentro destes limites são considerados tempos normais fora deste limete são outliers.
 ```{r, warning=FALSE, cache=TRUE}
 df2 <- dados %>%
   group_by(NRAno, CDTrigrama, CDTUP, TPOperacao) %>%
@@ -134,10 +148,9 @@ Este é um projeto que está em andamento tem muita análise estatística que da
 
 
 
-
+A função abaixo exporta o excel com a análise pronta.
 
 ```{r}
 write.xlsx(df3, file = "19-06-2024-outliers-anos-2019-a-2024-movimentacao-carga-e-misto.xlsx")
 
 ```
-
